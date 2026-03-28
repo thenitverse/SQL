@@ -22,12 +22,29 @@ VALUES(3,2,'2026-03-22','present');
 INSERT INTO attendence(id,roll_no,attendence_date,status)
 VALUES(4,2,'2026-03-23','absent');
 
-SELECT students.id,students.student_name,students.date_of_birth,students.date_joined, COUNT(CASE WHEN attendence.status = 'present' THEN 1 END) AS total_present_days,
-COUNT(CASE WHEN attendence.status = 'absent' THEN 1 END) AS total_absent_days,
-(SELECT COUNT(*) FROM students) AS total_students,
-(SELECT COUNT(DISTINCT roll_no)
-FROM attendence WHERE status = 'present') AS student_present_in_class
-FROM students 
+SELECT
+  students.id AS roll_no,
+  students.student_name,
+  students.date_of_birth,
+  students.date_joined,
+  COUNT(CASE WHEN attendence.status = 'present' THEN 1 END) AS total_present_days,
+  COUNT(CASE WHEN attendence.status = 'absent' THEN 1 END) AS total_absent_days,
+  GROUP_CONCAT(CASE WHEN attendence.status = 'present' THEN attendence.attendence_date END) AS present_dates,
+  GROUP_CONCAT(CASE WHEN attendence.status = 'absent' THEN attendence.attendence_date END) AS absent_dates,
+  (SELECT COUNT(*) FROM students) AS total_students,
+  (SELECT COUNT(DISTINCT roll_no) 
+   FROM attendence 
+   WHERE status = 'present') AS students_present_in_class
+FROM students
 LEFT JOIN attendence ON students.id = attendence.roll_no
-GROUP BY students.id,students.student_name,students.date_of_birth,students.date_joined
-ORDER BY students.id ASC ,students.student_name ASC ;
+GROUP BY students.id, students.student_name, students.date_of_birth, students.date_joined
+ORDER BY students.id ASC, students.student_name ASC;
+
+SELECT
+  attendence_date,
+  COUNT(CASE WHEN status = 'present' THEN 1 END) AS students_present,
+  COUNT(CASE WHEN status = 'absent' THEN 1 END) AS students_absent,
+  (SELECT COUNT(*) FROM students) AS total_students
+FROM attendence
+GROUP BY attendence_date
+ORDER BY attendence_date ASC;
